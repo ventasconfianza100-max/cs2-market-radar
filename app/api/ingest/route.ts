@@ -29,12 +29,18 @@ export async function POST(req: Request) {
   }
 
   const snapshot = { items, updatedAt: new Date().toISOString() };
-  const blob = await put("radar/snapshot.json", JSON.stringify(snapshot), {
-    access: "public",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json"
-  });
-
-  return NextResponse.json({ ok: true, url: blob.url, count: items.length });
+  try {
+    const blob = await put("radar/snapshot.json", JSON.stringify(snapshot), {
+      access: "public",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json"
+    });
+    return NextResponse.json({ ok: true, url: blob.url, count: items.length });
+  } catch (e) {
+    return NextResponse.json(
+      { error: "blob_write_failed", detail: e instanceof Error ? e.message : String(e) },
+      { status: 500 }
+    );
+  }
 }
