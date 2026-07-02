@@ -1,5 +1,6 @@
 import { fetchCSFloatListings } from "./csfloat";
 import { fetchSteamQuote } from "./steam";
+import { loadSnapshot } from "./snapshot";
 import { getMockItems, type RawItem } from "./mock";
 import { analyzeItem } from "./analysis";
 import { cacheGet, cacheSet } from "./cache";
@@ -28,6 +29,12 @@ async function loadRawItems(): Promise<{ items: RawItem[]; demo: boolean }> {
     );
     return { items: live, demo: false };
   }
+
+  // CSFloat bloquea IPs de datacenters (Vercel): usar el último snapshot
+  // subido por el recolector (scripts/collector.mjs) a Vercel Blob.
+  const snap = await loadSnapshot();
+  if (snap) return { items: snap.items, demo: false };
+
   return { items: getMockItems(), demo: true };
 }
 
