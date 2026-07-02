@@ -30,7 +30,7 @@ export default function SettingsPage() {
               {status === null ? "Verificando…" : status.csfloat ? (
                 <span className="text-accent2">Conectada ✓</span>
               ) : (
-                <span className="text-warn">Sin clave — modo demo</span>
+                <span className="text-warn">Sin conexión — modo demo</span>
               )}
             </dd>
           </div>
@@ -40,9 +40,10 @@ export default function SettingsPage() {
           </div>
         </dl>
         <p className="mt-4 text-xs text-muted">
-          Las API keys se configuran en el archivo <code className="rounded bg-surface px-1">.env</code> del servidor
-          (variable <code className="rounded bg-surface px-1">CSFLOAT_API_KEY</code>) — nunca se guardan en el navegador.
-          Consigue la tuya en csfloat.com → perfil → Developer.
+          La API de CSFloat funciona sin clave (con límites más estrictos). Si tienes una API key
+          (requiere haber hecho una compra o venta en CSFloat), configúrala como
+          <code className="rounded bg-surface px-1">CSFLOAT_API_KEY</code> en el servidor para mejores límites —
+          nunca se guarda en el navegador.
         </p>
       </div>
 

@@ -30,7 +30,7 @@ export default async function DashboardPage() {
         </div>
         {demo && (
           <span className="rounded-full border border-warn/40 bg-warn/10 px-3 py-1 text-xs text-warn">
-            Modo demo: configura CSFLOAT_API_KEY para datos reales
+            Modo demo: sin conexión a CSFloat en este momento (se reintenta solo)
           </span>
         )}
       </div>

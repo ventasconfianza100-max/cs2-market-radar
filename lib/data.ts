@@ -1,4 +1,4 @@
-import { fetchCSFloatListings, hasCSFloatKey } from "./csfloat";
+import { fetchCSFloatListings } from "./csfloat";
 import { fetchSteamQuote } from "./steam";
 import { getMockItems, type RawItem } from "./mock";
 import { analyzeItem } from "./analysis";
@@ -11,22 +11,22 @@ const ITEMS_TTL = 5 * 60 * 1000;
 const STEAM_ENRICH_LIMIT = 8; // ítems por request para no golpear a Steam
 
 async function loadRawItems(): Promise<{ items: RawItem[]; demo: boolean }> {
-  if (hasCSFloatKey()) {
-    const live = await fetchCSFloatListings(50);
-    if (live && live.length > 0) {
-      // Enriquecer los primeros N con precio Steam (respetando rate limit)
-      const slice = live.slice(0, STEAM_ENRICH_LIMIT);
-      await Promise.all(
-        slice.map(async (item) => {
-          const q = await fetchSteamQuote(item.marketHashName);
-          if (q) {
-            item.steamPrice = q.price;
-            item.volume24h = q.volume;
-          }
-        })
-      );
-      return { items: live, demo: false };
-    }
+  // Se intenta siempre: el endpoint de CSFloat funciona sin API key
+  // (con límites más estrictos). La key, si existe, mejora los límites.
+  const live = await fetchCSFloatListings(50);
+  if (live && live.length > 0) {
+    // Enriquecer los primeros N con precio Steam (respetando rate limit)
+    const slice = live.slice(0, STEAM_ENRICH_LIMIT);
+    await Promise.all(
+      slice.map(async (item) => {
+        const q = await fetchSteamQuote(item.marketHashName);
+        if (q) {
+          item.steamPrice = q.price;
+          item.volume24h = q.volume;
+        }
+      })
+    );
+    return { items: live, demo: false };
   }
   return { items: getMockItems(), demo: true };
 }

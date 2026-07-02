@@ -5,6 +5,8 @@ import type { RawItem } from "./mock";
 // Cliente read-only de la API oficial de CSFloat.
 // Docs: https://docs.csfloat.com/  — endpoint GET /api/v1/listings
 // Solo lectura de listings: nunca compra, nunca vende.
+// El endpoint público funciona SIN API key (con límites más estrictos);
+// si CSFLOAT_API_KEY está configurada se envía para mejores límites.
 
 const BASE = "https://csfloat.com/api/v1";
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
@@ -46,7 +48,6 @@ export function hasCSFloatKey(): boolean {
 
 export async function fetchCSFloatListings(limit = 50): Promise<RawItem[] | null> {
   const key = process.env.CSFLOAT_API_KEY;
-  if (!key) return null;
 
   const cacheKey = `csfloat:listings:${limit}`;
   const cached = cacheGet<RawItem[]>(cacheKey);
@@ -59,10 +60,10 @@ export async function fetchCSFloatListings(limit = 50): Promise<RawItem[] | null
   return inFlight;
 }
 
-async function doFetch(key: string, limit: number, cacheKey: string): Promise<RawItem[] | null> {
+async function doFetch(key: string | undefined, limit: number, cacheKey: string): Promise<RawItem[] | null> {
   try {
     const res = await fetch(`${BASE}/listings?limit=${limit}&sort_by=most_recent`, {
-      headers: { Authorization: key },
+      headers: key ? { Authorization: key } : undefined,
       next: { revalidate: 300 }
     });
     if (!res.ok) return null;
