@@ -11,7 +11,7 @@ import type { AnalyzedItem, ItemFilters } from "./types";
 const ITEMS_TTL = 5 * 60 * 1000;
 const STEAM_ENRICH_LIMIT = 8; // ítems por request para no golpear a Steam
 
-async function loadRawItems(): Promise<{ items: RawItem[]; demo: boolean }> {
+async function loadRawItems(): Promise<{ items: RawItem[]; demo: boolean; updatedAt: string | null }> {
   // Se intenta siempre: el endpoint de CSFloat funciona sin API key
   // (con límites más estrictos). La key, si existe, mejora los límites.
   const live = await fetchCSFloatListings(50);
@@ -27,24 +27,24 @@ async function loadRawItems(): Promise<{ items: RawItem[]; demo: boolean }> {
         }
       })
     );
-    return { items: live, demo: false };
+    return { items: live, demo: false, updatedAt: new Date().toISOString() };
   }
 
   // CSFloat bloquea IPs de datacenters (Vercel): usar el último snapshot
   // subido por el recolector (scripts/collector.mjs) a Vercel Blob.
   const snap = await loadSnapshot();
-  if (snap) return { items: snap.items, demo: false };
+  if (snap) return { items: snap.items, demo: false, updatedAt: snap.updatedAt };
 
-  return { items: getMockItems(), demo: true };
+  return { items: getMockItems(), demo: true, updatedAt: null };
 }
 
-export async function getAnalyzedItems(): Promise<{ items: AnalyzedItem[]; demo: boolean }> {
-  const cached = cacheGet<{ items: AnalyzedItem[]; demo: boolean }>("analyzed");
+export async function getAnalyzedItems(): Promise<{ items: AnalyzedItem[]; demo: boolean; updatedAt: string | null }> {
+  const cached = cacheGet<{ items: AnalyzedItem[]; demo: boolean; updatedAt: string | null }>("analyzed");
   if (cached) return cached;
 
-  const { items: raw, demo } = await loadRawItems();
+  const { items: raw, demo, updatedAt } = await loadRawItems();
   const items = raw.map(analyzeItem).sort((a, b) => b.opportunityScore - a.opportunityScore);
-  const result = { items, demo };
+  const result = { items, demo, updatedAt };
   cacheSet("analyzed", result, ITEMS_TTL);
   return result;
 }

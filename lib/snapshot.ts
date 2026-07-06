@@ -13,6 +13,26 @@ interface Snapshot {
   updatedAt: string;
 }
 
+// Diagnóstico: metadatos del snapshot sin filtrar por antigüedad.
+export async function snapshotMeta(): Promise<{ updatedAt: string; count: number; ageMs: number } | null> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
+  try {
+    const { blobs } = await list({ prefix: "radar/snapshot.json", limit: 1 });
+    if (blobs.length === 0) return null;
+    const res = await fetch(blobs[0].url, { cache: "no-store" });
+    if (!res.ok) return null;
+    const snap = (await res.json()) as Snapshot;
+    if (!Array.isArray(snap.items)) return null;
+    return {
+      updatedAt: snap.updatedAt,
+      count: snap.items.length,
+      ageMs: Date.now() - new Date(snap.updatedAt).getTime()
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function loadSnapshot(): Promise<Snapshot | null> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
 

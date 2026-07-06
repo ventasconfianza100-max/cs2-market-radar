@@ -28,3 +28,16 @@ export const RISK_LABEL: Record<string, string> = {
 };
 
 export const DISCLAIMER = "Esto no es una garantía de ganancia, es una señal basada en datos.";
+
+export function relativeAge(iso: string | null): string {
+  if (!iso) return "sin datos";
+  const ms = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(ms) || ms < 0) return "recién";
+  const min = Math.floor(ms / 60000);
+  if (min < 1) return "hace segundos";
+  if (min < 60) return `hace ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `hace ${h} h`;
+  const d = Math.floor(h / 24);
+  return `hace ${d} día${d === 1 ? "" : "s"}`;
+}

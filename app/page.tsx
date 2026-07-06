@@ -2,13 +2,13 @@ import Link from "next/link";
 import { getAnalyzedItems } from "@/lib/data";
 import OpportunityCard from "@/components/OpportunityCard";
 import MarketComparisonTable from "@/components/MarketComparisonTable";
-import { DISCLAIMER } from "@/lib/format";
+import { DISCLAIMER, relativeAge } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 export default async function DashboardPage() {
-  const { items, demo } = await getAnalyzedItems();
+  const { items, demo, updatedAt } = await getAnalyzedItems();
 
   const best = items.slice(0, 3);
   const discounted = [...items]
@@ -28,9 +28,13 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-semibold">Dashboard</h1>
           <p className="mt-1 text-sm text-muted">{DISCLAIMER}</p>
         </div>
-        {demo && (
+        {demo ? (
           <span className="rounded-full border border-warn/40 bg-warn/10 px-3 py-1 text-xs text-warn">
             Modo demo: sin conexión a CSFloat en este momento (se reintenta solo)
+          </span>
+        ) : (
+          <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted">
+            Datos actualizados {relativeAge(updatedAt)}
           </span>
         )}
       </div>

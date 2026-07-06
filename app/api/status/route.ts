@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { snapshotMeta } from "@/lib/snapshot";
 
 export const dynamic = "force-dynamic";
 
@@ -30,13 +31,22 @@ export async function GET() {
     Referer: "https://csfloat.com/search"
   };
 
-  const [plain, withUa] = await Promise.all([probe(base), probe(browserHeaders)]);
+  const [plain, withUa, snap] = await Promise.all([probe(base), probe(browserHeaders), snapshotMeta()]);
 
   return NextResponse.json({
     hasKey: Boolean(key),
     keyLength: key?.length ?? 0,
     csfloatStatus: plain,
     csfloatStatusBrowserHeaders: withUa,
+    snapshot: snap
+      ? {
+          updatedAt: snap.updatedAt,
+          ageMinutes: Math.round(snap.ageMs / 60000),
+          items: snap.count,
+          stale: snap.ageMs > 24 * 60 * 60 * 1000
+        }
+      : null,
+    blobConfigured: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
     checkedAt: new Date().toISOString()
   });
 }

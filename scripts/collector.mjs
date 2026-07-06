@@ -26,7 +26,10 @@ try {
 const KEY = process.env.CSFLOAT_API_KEY;
 const SECRET = process.env.INGEST_SECRET;
 const SITE = (process.env.SITE_URL || "").replace(/\/$/, "");
-const STEAM_LIMIT = 12; // ítems a enriquecer con Steam por pasada
+// Ítems a enriquecer con Steam por pasada. El servidor (api/ingest) arrastra
+// el último precio Steam conocido de cada skin entre pasadas, así que la
+// cobertura real crece pasada a pasada aunque aquí se limite por rate limit.
+const STEAM_LIMIT = Number(process.env.STEAM_LIMIT || 20);
 const LOOP_MINUTES = 10;
 
 if (!SECRET || !SITE) {
@@ -123,7 +126,7 @@ async function runOnce() {
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(`ingest ${res.status}: ${JSON.stringify(body)}`);
-  console.log(`  Subido: ${body.count} ítems → ${SITE}`);
+  console.log(`  Subido: ${body.count} ítems → ${SITE}` + (body.alerted ? ` · ${body.alerted} alerta(s) enviada(s)` : ""));
 }
 
 const loop = process.argv.includes("--loop");
